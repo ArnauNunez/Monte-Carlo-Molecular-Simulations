@@ -1,0 +1,7 @@
+# Notebook (Parts A and B)
+numpy>=1.22
+matplotlib>=3.5
+notebook>=6.4        # or: jupyterlab
+
+# Hard-sphere gas scripts (src/hard_sphere_gas/) -- only needed for Q1-Q3
+vpython>=7.6
