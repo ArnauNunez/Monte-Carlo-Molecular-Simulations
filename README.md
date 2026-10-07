@@ -1,1 +1,135 @@
-# Monte-Carlo-Molecular-Simulations
+# Statistical Mechanics Simulations: Hard-Sphere Gas, Lennard-Jones Fluid and a Three-Level Monte Carlo System
+
+![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)
+![Python](https://img.shields.io/badge/python-3.8%2B-blue.svg)
+
+Simulation project for the course *Termodinàmica i Mecànica Estadística* (BSc in Physics, Universitat Autònoma de Barcelona, May 2026).
+It combines molecular-dynamics-style simulations of a hard-sphere gas, the analysis of Lennard-Jones simulation data, and a from-scratch Metropolis Monte Carlo code that is validated against exact canonical results.
+
+**Authors:** Arnau Núñez Martínez · Arnau Viladevall Ferré
+
+---
+
+## Contents
+
+| Part | Topic | Method | Location |
+|---|---|---|---|
+| 1 | Hard-sphere gas: effect of atom size, canonical ensemble via an **Andersen thermostat**, and a **gravitational field** | Time-stepped 3D elastic collisions with rollback to first contact (VPython), live Maxwell–Boltzmann and barometric histograms | [`src/hard_sphere_gas/`](src/hard_sphere_gas) |
+| 2 | **Lennard-Jones fluid**: hysteresis/metastability and **isothermal compressibility** of gas and liquid | Analysis of NVT simulation data, finite differences, error propagation | [`notebooks/`](notebooks) (Part A) |
+| 3 | **Three-level canonical system** | Own **Metropolis Monte Carlo** implementation, equilibration checks, finite-size scaling of fluctuations | [`notebooks/`](notebooks) (Part B) |
+
+The main deliverable is the notebook [`notebooks/thermodynamics_simulation_project.ipynb`](notebooks/thermodynamics_simulation_project.ipynb), saved with all outputs so it can be read directly on GitHub.
+
+## Key results
+
+### Hard-sphere gas (VPython)
+- **Atom size.** Radii that are too small give almost no collisions; radii that are too large give a dense, strongly correlated system that no longer behaves like a gas. `Ratom = 0.02` (container side `L = 1`) was chosen as a compromise between collision frequency and visual clarity.
+- **Andersen thermostat** (`q2_andersen_thermostat.py`). Each atom is, with probability `nu` per step, resampled from the Maxwell–Boltzmann distribution at `T = 300 K`. Both the speed and the kinetic-energy histograms converge to the theoretical canonical curves much faster than in the microcanonical original.
+- **Gravity** (`q3_gravity.py`). The simulated `v_z` and `z` distributions are compared with the Gaussian and barometric (`exp(-mgz/k_BT)`) predictions. Agreement holds up to `g ≈ 9·10^5` (in simulation units); for much stronger fields the equilibrium assumptions break down (see the report).
+- Bugs fixed with respect to the original example: histogram bookkeeping in `interchange`, wall reflections that left atoms outside the box, and spurious updates when three atoms collide at once (handled approximately by letting only one pair collide per step).
+
+### Lennard-Jones fluid
+- **Hysteresis.** At `T = 0.2`, `ρ = 0.8` a system equilibrated there forms a compact, ordered structure, whereas a system quenched from `T = 1.5` stays in a disordered, metastable state with a higher chemical potential.
+- **Isothermal compressibility** (reduced units):
+
+| T | κ_T gas (simulation) | κ_T gas (ideal) | κ_T liquid |
+|---|---|---|---|
+| 0.8 | 286 ± 202 | 357 | 0.11 ± 0.03 ¹ |
+| 1.0 | 52.6 ± 6.7 | 40.0 | 0.78 ² |
+| 1.2 | 23.0 ± 7.0 | 11.9 | 0.41 ± 0.23 ¹ |
+| 1.4 | 17.0 ± 2.1 | 11.9 | 0.26 ± 0.12 ¹ |
+
+  ¹ mean ± std of the local estimates between consecutive densities. ² a single usable interval. The real uncertainty of the liquid values is larger than the quoted scatter (see the notebook); the robust conclusion is `κ_T(gas) ≫ κ_T(liquid)` by a factor of ~50 or more, and gas values that lie above the ideal-gas ones, as expected from attractive interactions.
+
+![Gas compressibility](figures/compressibility_gas.png)
+
+### Three-level system (Metropolis Monte Carlo)
+- Simulated level populations agree with the canonical prediction `p_i = exp(-E_i/T)/z` to within 0.003 over `T ∈ [0.2, 8]` (`N = 1000`).
+- The characteristic temperature `T_c = 10/ln N ≈ 1.45` marks where the upper level (`E = 10ε`) starts to be populated.
+- The variance of the total energy grows linearly with `N` and the relative fluctuation scales as `N^-1/2` (fitted exponent −0.49).
+
+![Occupations vs temperature](figures/occupations_vs_T.png)
+![Energy fluctuations](figures/energy_fluctuations.png)
+
+## Repository structure
+
+```
+.
+├── README.md
+├── LICENSE
+├── requirements.txt
+├── notebooks/
+│   └── thermodynamics_simulation_project.ipynb   # Parts A and B (executed, with outputs)
+├── src/
+│   └── hard_sphere_gas/
+│       ├── q1_atom_size.py                       # effect of the atom radius
+│       ├── q2_andersen_thermostat.py             # canonical ensemble, speed + energy histograms
+│       └── q3_gravity.py                         # gravity, v_z and z histograms
+└── figures/                                      # figures generated by the notebook
+```
+
+## Prerequisites
+
+### Software
+- **Python 3.8 or newer** (the notebook was executed with Python 3.12, NumPy 2.4 and Matplotlib 3.10).
+- **Notebook (Parts A and B):** `numpy`, `matplotlib`, and Jupyter (`notebook` or `jupyterlab`).
+- **Hard-sphere gas scripts (Part 1):** `vpython` 7.x, plus a modern web browser. VPython renders the 3D scene and the live graphs with WebGL in the browser, so a desktop or laptop with WebGL support is needed.
+
+### Hardware
+- No GPU required. Any recent laptop or desktop with **2 GB of free RAM** is enough.
+- **Notebook:** runs end-to-end in about **30 seconds** on a single CPU core (measured on a cloud virtual machine; typical laptops should be at least as fast). The Monte Carlo code is plain Python/NumPy.
+- **VPython scripts:** the pair-collision search is `O(N²)` in pure Python (`N = 500` atoms), so the animation is CPU-bound and typically runs well below the nominal `rate(300)`. Use a recent CPU and close heavy applications; reduce `Natoms` for a smoother animation.
+
+## Installation and usage
+
+```bash
+git clone https://github.com/<your-username>/<repository-name>.git
+cd <repository-name>
+
+python -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+**Notebook**
+```bash
+jupyter notebook notebooks/thermodynamics_simulation_project.ipynb
+```
+Run all cells (*Kernel → Restart & Run All*). Figures are written to `figures/`. All random numbers derive from a single seed (`SEED`) defined in the first cell, so the results are reproducible.
+
+**Hard-sphere gas**
+```bash
+python src/hard_sphere_gas/q1_atom_size.py
+python src/hard_sphere_gas/q2_andersen_thermostat.py
+python src/hard_sphere_gas/q3_gravity.py
+```
+Each script opens a browser tab with the simulation. Main parameters (top of every file): number of atoms `Natoms`, atom radius `Ratom`, temperature `T`, time step `dt`; `nu` (thermostat collision probability) in `q2` and `g` (gravity) in `q3`. `q1_atom_size.py` ships with `Ratom = 0.005`; edit it to explore other radii (`0.02` was used in the rest of the project).
+
+## Methods in brief
+
+- **Hard-sphere gas.** Positions are advanced with a fixed time step; overlapping pairs are detected, rolled back to first contact, and their momenta are reflected in the centre-of-mass frame (elastic, momentum- and energy-conserving). Walls reflect specularly. Velocity, energy and height histograms are updated incrementally and time-averaged.
+- **Andersen thermostat.** At every step each atom is replaced, with probability `nu`, by a fresh velocity drawn from `N(0, k_BT/m)` per component.
+- **Lennard-Jones compressibility.** `κ_T = 1 / (ρ ∂P/∂ρ)_T` from `P(ρ)` at fixed `T` (NVT), with the slope from a least-squares fit (gas) or finite differences (liquid) and propagated simulator errors.
+- **Metropolis Monte Carlo.** Random molecule, symmetric proposal to one of the two other levels, acceptance `min(1, e^{-ΔE/T})`. Populations are tracked incrementally, so each step is `O(1)`.
+
+## Limitations
+
+- Three-body collisions in the hard-sphere gas are approximated: only one pair per atom collides in each time step.
+- With `dt = 1e-5` a typical atom moves about 0.014 per step (`L = 1`), comparable to the atom radius, so collisions are resolved only approximately; gravity values are strongly exaggerated for visualization.
+- The Lennard-Jones data come from a limited number of state points with sizeable statistical errors; compressibilities derived from numerical derivatives are noisy, especially for the liquid and at low temperature.
+- The Lennard-Jones simulator used in Q4 and Q5 was provided with the course and is not redistributed here.
+
+## License
+
+This project is released under the [MIT License](LICENSE).
+
+## Acknowledgements
+
+- The hard-sphere gas scripts are adapted from the VPython hard-sphere gas example by **Bruce Sherwood**; the original authorship is preserved in the file headers.
+- Lennard-Jones simulations were run with the simulator provided in the *Termodinàmica i Mecànica Estadística* course (UAB).
+
+## Citation
+
+If you use this material, please cite it as:
+
+> A. Núñez Martínez and A. Viladevall Ferré, *Statistical Mechanics Simulations: Hard-Sphere Gas, Lennard-Jones Fluid and a Three-Level Monte Carlo System*, Universitat Autònoma de Barcelona, 2026.
