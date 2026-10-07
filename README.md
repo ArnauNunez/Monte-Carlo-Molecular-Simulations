@@ -126,7 +126,6 @@ This project is released under the [MIT License](LICENSE).
 ## Acknowledgements
 
 - The hard-sphere gas scripts are adapted from the VPython hard-sphere gas example by **Bruce Sherwood**; the original authorship is preserved in the file headers.
-- Lennard-Jones simulations were run with the simulator provided in the *Termodinàmica i Mecànica Estadística* course (UAB).
 
 ## Citation
 
