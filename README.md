@@ -126,9 +126,3 @@ This project is released under the [MIT License](LICENSE).
 ## Acknowledgements
 
 - The hard-sphere gas scripts are adapted from the VPython hard-sphere gas example by **Bruce Sherwood**; the original authorship is preserved in the file headers.
-
-## Citation
-
-If you use this material, please cite it as:
-
-> A. Núñez Martínez and A. Viladevall Ferré, *Statistical Mechanics Simulations: Hard-Sphere Gas, Lennard-Jones Fluid and a Three-Level Monte Carlo System*, Universitat Autònoma de Barcelona, 2026.
